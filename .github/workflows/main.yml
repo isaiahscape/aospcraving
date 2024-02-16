@@ -20,6 +20,7 @@ on:
           - 'crDroid 14.0'
           - 'ArrowOS 13.1'
           - 'DerpFest 13.0'
+          - 'Project Matrixx'
       BUILD_DIFFERENT_ROM:
         description: "Command to initialize a different 'repo' project:"
         required: false

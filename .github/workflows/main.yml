@@ -20,7 +20,7 @@ on:
           - 'crDroid 14.0'
           - 'ArrowOS 13.1'
           - 'DerpFest 13.0'
-          - 'Project Matrixx'
+          - 'ProjectMatrixx'
       BUILD_DIFFERENT_ROM:
         description: "Command to initialize a different 'repo' project:"
         required: false
@@ -122,7 +122,7 @@ jobs:
           "LineageOS 20.0")
             repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --depth=1
           ;;
-          "Project Matrixx")
+          "ProjectMatrixx")
             repo init -u https://github.com/ProjectMatrixx/android.git -b 14.0 --git-lfs --depth=1
           ;;
         esac

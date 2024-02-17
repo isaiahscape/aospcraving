@@ -20,11 +20,10 @@ on:
           - 'crDroid 14.0'
           - 'ArrowOS 13.1'
           - 'DerpFest 13.0'
-          - 'ProjectMatrixx'
       BUILD_DIFFERENT_ROM:
         description: "Command to initialize a different 'repo' project:"
         required: false
-        default: "echo 'Build Starting!'"
+        default: "input your own Manifest Repository"
       REMOVALS:
         description: "Folders to be removed before syncing:"
         required: false
@@ -122,9 +121,6 @@ jobs:
           "LineageOS 20.0")
             repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --depth=1
           ;;
-          "ProjectMatrixx")
-            repo init -u https://github.com/ProjectMatrixx/android.git -b 14.0 --git-lfs --depth=1
-          ;;
         esac
       id: pwd
 
@@ -158,11 +154,12 @@ jobs:
         fi \
 
         # Sync the repositories
-        repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync  && \
+        repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8  && \
 
         # Set up build environment
         export BUILD_USERNAME=${{ github.actor }} ; \
         export BUILD_HOSTNAME=crave ; \
+        export TZ=Asia/Jakarta ; \
         source build/envsetup.sh && \
 
         # Build the ROM

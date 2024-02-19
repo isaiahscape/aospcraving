@@ -13,11 +13,11 @@ on:
       BASE_PROJECT:
         description: 'Choose a base project:'
         required: true
-        default: 'LineageOS 20.0'
+        default: 'LOS 21'
         type: choice
         options:
           - 'LineageOS 20.0'
-          - 'crDroid 14.0'
+          - 'LOS 21'
           - 'ArrowOS 13.1'
           - 'DerpFest 13.0'
       BUILD_DIFFERENT_ROM:
@@ -31,27 +31,27 @@ on:
       LOCAL_MANIFEST:
         description: "Personal local manifest [repository or raw]:"
         required: true
-        default: 'https://github.com/Assunzain/local_manifest'
+        default: 'https://github.com/isaiahscape/local_manifests'
       LOCAL_MANIFEST_BRANCH:
         description: "Personal local manifest's branch:"
         required: false
-        default: 'lineage-10'
+        default: 'veux'
       DEVICE_NAME:
         description: "Device's codename:"
         required: true
-        default: "X01AD"
+        default: "veux"
       PRODUCT_NAME:
         description: "Product to build:"
         required: true
-        default: "lineage_X01AD"
+        default: "awaken_veux"
       BUILD_COMMAND:
         description: 'Command to be used for compiling:'
         required: true
-        default: 'mka bacon'
+        default: 'make bacon -j16'
       BUILD_TYPE:
         description: 'Type of build:'
         required: true
-        default: 'userdebug'
+        default: 'user'
         type: choice
         options: 
         - 'eng'
@@ -60,7 +60,7 @@ on:
       CLEAN_BUILD:
         description: 'Build with a clean workspace?'
         required: true
-        default: 'no'
+        default: 'yes'
         type: choice
         options: 
         - 'yes'
@@ -116,8 +116,8 @@ jobs:
           "DerpFest 13.0")
             repo init -u https://github.com/DerpFest-AOSP/manifest.git -b 13 --depth=1
           ;;
-          "crDroid 14.0")
-            repo init -u https://github.com/crdroidandroid/android.git -b 14.0 --git-lfs --depth=1
+          "LOS 21")
+            repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs --depth=1
           ;;
           "LineageOS 20.0")
             repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --depth=1
@@ -155,7 +155,7 @@ jobs:
         fi \
 
         # Sync the repositories
-        repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8  && \
+        repo sync -c -j16 --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j16  && \
 
         # Set up build environment
         export BUILD_USERNAME=${{ github.actor }} ; \

@@ -17,41 +17,40 @@ on:
         type: choice
         options:
           - 'LineageOS 20.0'
-          - 'LOS 21'
+          - 'LineageOS 21.0'
           - 'ArrowOS 13.1'
           - 'DerpFest 13.0'
       BUILD_DIFFERENT_ROM:
         description: "Command to initialize a different 'repo' project:"
         required: false
-        default: "input your own Manifest Repository"
+        default: "echo 'Build Starting!'"
       REMOVALS:
         description: "Folders to be removed before syncing:"
         required: false
-        default: ".repo/local_manifest"
       LOCAL_MANIFEST:
         description: "Personal local manifest [repository or raw]:"
         required: true
-        default: 'https://github.com/Assunzain/local_manifest'
+        default: 'https://github.com/isaiahscape/local_manifests'
       LOCAL_MANIFEST_BRANCH:
         description: "Personal local manifest's branch:"
         required: false
-        default: 'lineage-10'
+        default: 'codename'
       DEVICE_NAME:
         description: "Device's codename:"
         required: true
-        default: "X01AD"
+        default: "codename"
       PRODUCT_NAME:
         description: "Product to build:"
         required: true
-        default: "lineage_X01AD"
+        default: "rom_codename"
       BUILD_COMMAND:
         description: 'Command to be used for compiling:'
         required: true
-        default: 'mka bacon'
+        default: 'make bacon -j16'
       BUILD_TYPE:
         description: 'Type of build:'
         required: true
-        default: 'userdebug'
+        default: 'user'
         type: choice
         options: 
         - 'eng'
@@ -97,33 +96,8 @@ jobs:
       # Generate 'git' credential in base of the workflow's author.
     - name: Set-up 'git' credential(s)
       run: |
-        git config --global user.email "{$GH_EMAIL}"
-        git config --global user.name "{$GH_USERNAME}"
-        echo "https://{$GH_USERNAME}:{$GH_TOKEN}@github.com" > ~/.git-credentials
-        git config --global credential.helper "store --file ~/.git-credentials"
-      env:
-        GH_EMAIL: ${{ secrets.GH_EMAIL }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        GH_USERNAME: ${{ secrets.GH_USERNAME }}
-
-      # Initialize the previously choosen 'repo' project.
-    - name: Configure the 'repo' environment
-      run: |
-        case "${{ github.event.inputs.BASE_PROJECT }}" in
-          "ArrowOS 13.1")
-            repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-13.1 --depth=1
-          ;;
-          "DerpFest 13.0")
-            repo init -u https://github.com/DerpFest-AOSP/manifest.git -b 13 --depth=1
-          ;;
-          "LOS 21")
-            repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs --depth=1
-          ;;
-          "LineageOS 20.0")
-            repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --depth=1
-          ;;
-        esac
-      id: pwd
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
       # Download and configure 'crave'.
     - name: Configure the 'crave' environment
@@ -135,9 +109,32 @@ jobs:
         envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
         rm -rf ${PWD}/crave.conf.sample
       env:
-        CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
-        CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
+        CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
+        CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
 
+      # Initialize the previously choosen 'repo' project.
+    - name: Set the 'crave' project
+      run: |
+        case "${{ github.event.inputs.BASE_PROJECT }}" in
+          "ArrowOS 13.1")
+            repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-13.1 --depth=1
+            crave set --projectID 73
+          ;;
+          "DerpFest 13.0")
+            repo init -u https://github.com/DerpFest-AOSP/manifest.git -b 13 --depth=1
+            crave set --projectID 64
+          ;;
+          "LineageOS 21.0")
+            repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs --depth=1
+            crave set --projectID 72
+          ;;
+          "LineageOS 20.0")
+            repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --depth=1
+            crave set --projectID 36
+          ;;
+        esac
+      id: pwd
+        
       # Create a 'crave' job for building.
     - name: Start compilation through 'crave'
       run: |
@@ -155,12 +152,12 @@ jobs:
         fi \
 
         # Sync the repositories
-        repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8  && \
-
+        repo sync -c -j10 --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync  && \
+        rm -rf vendor/plros/prebuilt/apps/Cromite;
+        git clone https://gitlab.com/plros-lab/android_packages_apps_Cromite.git vendor/plros/prebuilt/apps/Cromite && \
         # Set up build environment
         export BUILD_USERNAME=${{ github.actor }} ; \
         export BUILD_HOSTNAME=crave ; \
-        export TZ=Asia/Jakarta ; \
         source build/envsetup.sh && \
 
         # Build the ROM

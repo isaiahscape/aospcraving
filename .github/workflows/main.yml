@@ -17,7 +17,7 @@ on:
         type: choice
         options:
           - 'LineageOS 20.0'
-          - 'crDroid 14.0'
+          - 'LOS 21'
           - 'ArrowOS 13.1'
           - 'DerpFest 13.0'
       BUILD_DIFFERENT_ROM:
@@ -116,8 +116,8 @@ jobs:
           "DerpFest 13.0")
             repo init -u https://github.com/DerpFest-AOSP/manifest.git -b 13 --depth=1
           ;;
-          "crDroid 14.0")
-            repo init -u https://github.com/Project-Awaken/android_manifest.git -b ursa --git-lfs --depth=1
+          "LOS 21")
+            repo init -u https://github.com/lineageOS/android.git -b lineage-21.0 --git-lfs --depth=1
           ;;
           "LineageOS 20.0")
             repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --depth=1

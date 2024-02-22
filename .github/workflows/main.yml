@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-name: Start job for building through Crave.
+name: You have to cook it here.
 on:
   workflow_dispatch:
     # Various inputs to simplify usage of workflow.

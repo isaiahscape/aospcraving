@@ -1,4 +1,4 @@
-# crave_aosp_builder
+# Crave.io's AOSP Builder
 
 ## Prerequisites 
 foss.crave.io account

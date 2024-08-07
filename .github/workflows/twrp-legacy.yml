@@ -67,6 +67,12 @@ jobs:
     name: Prepare for Building
     runs-on: ubuntu-latest
     steps:
+    - name: Check-out to repository
+      uses: actions/checkout@v4
+
+    - name: Check Credentials
+      run: bash scripts/env-checker.sh
+
     - name: Display Run Parameters # Credit to azwhikaru for this part
       run: |
         echo "::group::User Environment Variables"
@@ -80,6 +86,14 @@ jobs:
         echo "Build Command: ${{ github.event.inputs.BUILD_COMMAND }}"
         echo "Clean Build: ${{ github.event.inputs.CLEAN_BUILD }}"
         echo "::endgroup::"
+
+        echo "Displaying Local Manifests"
+        if [[ -z "${{ secrets.DISPLAY_FALSE }}" ]]; then
+          git clone ${{ github.event.inputs.LOCAL_MANIFEST }} --depth 1 -b ${{ github.event.inputs.LOCAL_MANIFEST_BRANCH }} local_manifests
+          cat local_manifests/*.xml
+        else
+          echo "Displaying is disabled through secrets."
+        fi
 
     - name: Set Project variables
       id: proj-variables
@@ -205,7 +219,7 @@ jobs:
         if grep -q "$PROJECTFOLDER" <(crave clone list --json | jq -r '.clones[]."Cloned At"') && [ "${DCDEVSPACE}" == "1" ]; then
           crave clone destroy -y $PROJECTFOLDER || echo "Error removing $PROJECTFOLDER"
         else          
-        rm -rf $PROJECTFOLDER || true
+        echo "Skipping removal"
         fi
 
         if [ "${DCDEVSPACE}" == "1" ]; then
@@ -254,8 +268,18 @@ jobs:
       # Send Build 'start' notification
     - name: Telegram Notification
       continue-on-error: true
-      uses: xinthink/action-telegram@v1.1
-      with:
+      run: |
+        send_telegram_message() {
+          local message="$1"
+          curl -s -X POST \
+          https://api.telegram.org/bot$botToken/sendMessage \
+          -d chat_id=$chatId \
+          -d text="$message" \
+          -d parse_mode="Markdown"
+        }
+
+        send_telegram_message "Crave Project: ${{ github.event.inputs.BASE_PROJECT }}%0ACrave ProjectID: $PROJECTID %0ABuild for ${{ github.event.inputs.DEVICE_NAME }} has been queued %0ACheck Progress at: %0Ahttps://github.com/$(echo "${{ github.repository }}" | sed 's@_@\\_@g')/actions/runs/${{ github.run_id }}"
+      env:
         chatId: ${{ secrets.TELEGRAM_TO }}
         botToken: ${{ secrets.TELEGRAM_TOKEN }}
         jobStatus: "Build Started"
@@ -339,16 +363,58 @@ jobs:
         make installclean && \
         ${{ github.event.inputs.BUILD_COMMAND }}"
 
-      # Send Build 'status' notification
+        echo "Build is queued! Please wait for your build to start."
+        echo "Check foss.crave.io Dashboard to see builds"
+        echo "Running build's log will show up here!"
+
+      # Send Build 'status' notification (Success)
     - name: Telegram Notification
-      if:  ${{ success()  || cancelled() || failure() }}
+      if:  ${{ success() }}
       continue-on-error: true
-      uses: xinthink/action-telegram@v1.1
-      with:
+      run: |
+        send_telegram_message() {
+          local message="$1"
+          curl -s -X POST \
+          https://api.telegram.org/bot$botToken/sendMessage \
+          -d chat_id=$chatId \
+          -d text="$message" \
+          -d parse_mode="Markdown"
+        }
+
+        send_telegram_message "Crave Project: ${{ github.event.inputs.BASE_PROJECT }}%0ACrave ProjectID: $PROJECTID %0ABuild for ${{ github.event.inputs.DEVICE_NAME }} has Succeeded! %0ACheck Progress at: %0Ahttps://github.com/$(echo "${{ github.repository }}" | sed 's@_@\\_@g')/actions/runs/${{ github.run_id }}%0ADownload at: https://github.com/$(echo "${{ github.repository }}" | sed 's@_@\\_@g')/releases/tag/${{ github.run_id }}"
+
+      env:
         chatId: ${{ secrets.TELEGRAM_TO }}
         botToken: ${{ secrets.TELEGRAM_TOKEN }}
         jobStatus: ${{ job.status }}
         skipSuccess: false
+
+      # Send Build 'status' notification (Fail/Cancel)
+    - name: Telegram Notification
+      if:  ${{ cancelled() || failure() }}
+      continue-on-error: true
+      run: |
+        send_telegram_message() {
+          local message="$1"
+          curl -s -X POST \
+          https://api.telegram.org/bot$botToken/sendMessage \
+          -d chat_id=$chatId \
+          -d text="$message" \
+          -d parse_mode="Markdown"
+        }
+
+        if [ "$jobStatus" = "cancelled" ]; then
+          jobMessage="has been Cancelled!"
+        elif [ "$jobStatus" = "failure" ]; then
+          jobMessage="has Failed!"
+        fi
+
+        send_telegram_message "Crave Project: ${{ github.event.inputs.BASE_PROJECT }}%0ACrave ProjectID: $PROJECTID %0ABuild for ${{ github.event.inputs.DEVICE_NAME }} $jobMessage %0ACheck Progress at: %0Ahttps://github.com/$(echo "${{ github.repository }}" | sed 's@_@\\_@g')/actions/runs/${{ github.run_id }}"
+        # Todo: error.log link
+      env:
+        chatId: ${{ secrets.TELEGRAM_TO }}
+        botToken: ${{ secrets.TELEGRAM_TOKEN }}
+        jobStatus: ${{ job.status }}
 
       # Only reach this wheter the user killed the workflow.
     - name: Execute if the job is cancelled

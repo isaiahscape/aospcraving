@@ -16,9 +16,11 @@ While using this repo, please take a look at [the wiki](https://opendroid.pugzar
 ## Prerequisites 
 foss.crave.io account
 
+This workflow assumes you know basics of android building and github actions. Please read the Readme thoroughly before asking questions.
+
 ## Setup Instructions
 - Download crave.conf from API Keys of foss.crave.io dashboard
-- Fork this repo
+- Fork this repo(please avoid importing it via the import menu or manually copying the workflow file. This hurts fork stats and makes it harder for you to update the repo to the latest version)
 - Go to (repo) Settings -> Security -> Secrets and Variables -> Actions
 - Copy your username and authentication token from crave.conf
 ![Repository Secrets](assets/cravetoken.png)
@@ -30,10 +32,8 @@ foss.crave.io account
 
 - Go to Settings -> Code and Automation -> Actions -> General
 - Set workflow Permissions to "Read and Write Permissions" and save.
-
-If this is greyed out and you're building from a Github Organization, 
-
-go to Organization settings -> Code, planning, and automation -> Actions -> General -> Workflow permissions, set it to "Read and Write Permissions" and save
+    - If this permission is greyed out and you're building from a Github Organization,
+        - go to Organization settings -> Code, planning, and automation -> Actions -> General -> Workflow permissions, set it to "Read and Write Permissions" and save
 
 - Now you are ready to build! Go to "Crave Builder" workflow and start building
 ## Selfhosted Runners:
@@ -99,47 +99,52 @@ Extra flags for crave binary
 Custom Upload limit for telegram-upload. Default is 2147483648
 ### GH_UPLOAD_LIMIT (Optional)
 Custom Upload limit for github releases. Default is 2147483648
+### DISPLAY_FALSE (Optional)
+This workflow displays your local manifests by default. To disable this, create this secret with any data
 
 ## Inputs Explanation
 ### Base Project
-    - These are the projects everyone can build, with a foss.crave.io account
-    - These are the ones officially added
+- These are the projects everyone can build, with a foss.crave.io account
+- These are the ones officially added
 ### Repo init Command
-    - This is only for when you are initializing another ROM. When doing this, ensure you are initializing on top of closest cousin base project
-    - Don't initialize android 14 on top of android 13 projects
-    - If you just type 'skip', it will skip the compilation. This is useful for uploading and debugging
+- This is only for when you are initializing another ROM. When doing this, ensure you are initializing on top of closest cousin base project
+- Don't initialize android 14 on top of android 13 projects
+- If you just type 'skip', it will skip the compilation. This is useful for uploading and debugging
 ### Removals
-    - When we resync another ROM on top, we are bound to get "cannot checkout" errors. To fix this, we add that folder to the Removals tab
-    - Add a space after .repo/local_manifests and add these folders. Don't change if you don't need to
-    - Almost defunct now, since /opt/crave/resync.sh script on crave handles everything for us
+- When we resync another ROM on top, we are bound to get "cannot checkout" errors. To fix this, we add that folder to the Removals tab
+- Add a space after .repo/local_manifests and add these folders. Don't change if you don't need to
+- Almost defunct now, since /opt/crave/resync.sh script on crave handles everything for us
 ### Local Manifest
-    - Here you enter the git repo and branch for your local manifests, containing device specific repositories. These will be cloned to .repo/local_manifests
+- Here you enter the git repo and branch for your local manifests, containing device specific repositories. These will be cloned to .repo/local_manifests
 ### Device Details
-    - Enter the device codename you want to build for inside DEVICE_NAME, like "oxygen".
-    - Enter the device codename inside PRODUCT_NAME, to be inserted into the breakfast command. If you enter makefile name(without the .mk, like "lineage_oxygen"), it will fallback to using the lunch command. 
+- Enter the device codename you want to build for inside DEVICE_NAME, like "oxygen".
+- Enter the device codename inside PRODUCT_NAME, to be inserted into the breakfast command. If you enter makefile name(without the .mk, like "lineage_oxygen"), it will fallback to using the lunch command.
+- If the project is RisingOS and no changes have been made, breakfast becomes riseup. If makefile name is detected, it falls back to lunch 
+- For devices with '_' (underscores) in the target, please report them [here](https://github.com/sounddrill31/crave_aosp_builder/discussions/44) so I can add support for them
+
 ### Build Command
-    - eg. m updatepackage, mka bacon, make recoveryimage
+- eg. m updatepackage, mka bacon, make recoveryimage
 ### Build Type
-    - Choose the build type
-- user:  Limited access; suited for production
+- Choose the build type
+    - user:  Limited access; suited for production
 
-- userdebug:  Like user but with root access and debug capability; very close to production performance
+    - userdebug:  Like user but with root access and debug capability; very close to production performance
 
-- eng:  Development configuration with faster build time; most suited for day-to-day development
+    - eng:  Development configuration with faster build time; most suited for day-to-day development
 ### Clean Build
-  - Uses fresh Base Project sources without any of your changes(use only for testing/debugging)
+- Uses fresh Base Project sources without any of your changes(use only for testing/debugging)
 
 ## Known Issues
-  - You Tell Me :)
+- You Tell Me :)
 ## Extra Info
-  - For scheduled builds, it's better to remove the workflow dispatch stuff, check [lineage_builder](https://github.com/a57y17lte-dev/lineage_builder) for reference.
-  - This Repo is a spiritual successor to azwhikaru's Action-TWRP-Builder
+- For scheduled builds, it's better to remove the workflow dispatch stuff, check [lineage_builder](https://github.com/a57y17lte-dev/lineage_builder) for reference.
+- This Repo is a spiritual successor to azwhikaru's Action-TWRP-Builder
 ## Credits!
-  - [AntoninoScordino](https://github.com/AntoninoScordino) for the recent rewrite
-  - [azwhikaru's Action-TWRP-Builder](https://github.com/azwhikaru/Action-TWRP-Builder) Which I used as reference
-  - [My Manifest tester](https://github.com/sounddrill31/Manifest_Tester) (credits to [AmogOS](https://github.com/AmogOS-Rom) project for original logic)
-  - [Other contributors](https://github.com/sounddrill31/crave_aosp_builder/graphs/contributors)
-  - [The crave team](https://github.com/accupara) for the build servers and helping us out when we get stuck
+- [AntoninoScordino](https://github.com/AntoninoScordino) for the recent rewrite
+- [azwhikaru's Action-TWRP-Builder](https://github.com/azwhikaru/Action-TWRP-Builder) Which I used as reference
+- [My Manifest tester](https://github.com/sounddrill31/Manifest_Tester) (credits to [AmogOS](https://github.com/AmogOS-Rom) project for original logic)
+- [Other contributors](https://github.com/sounddrill31/crave_aosp_builder/graphs/contributors)
+- [The crave team](https://github.com/accupara) for the build servers and helping us out when we get stuck
 
 ## FAQs:
 
@@ -149,12 +154,7 @@ Q1. What is this Crave.io? How do I get an account?
 
 A. Crave.io is a build accelerator capable of cutting down build time by quite a bit. They are providing free build servers, however: self signup is disabled. 
 
-Please contact either `uvatbc`(`yuvraaj` on telegram) or me on discord/telegram.
-
-Remember to share the following:
-- Name
-- Email
-- Git profile(preferably with your device sources or stuff you're proud of)    
+Please fill out the [form](https://forms.gle/Jhvy9osvdmcS9B7fA) if you're looking for an account. for more info, check the [wiki](https://opendroid.pugzarecute.com/wiki/Crave_Devspace#getting-a-fosscraveiohttpsfosscraveio-account)
 
 
 ### Chat Help
